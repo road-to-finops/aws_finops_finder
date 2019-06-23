@@ -23,8 +23,12 @@ Ref: https://boto3.readthedocs.io/en/latest/guide/quickstart.html
 Clone the Tool and run as below
 
 ```
+
 aws-vault exec <cred>
 ./multi_account.py -m <methods>
+
+If you wish to run for just one account use:
+./multi_account.py -m <methods> -a <account_id>
 
 #### Methods
 - stopped_ec2 - Stopped EC2
