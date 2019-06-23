@@ -34,8 +34,4 @@ Access to the org IAM Role 'OrganizationAccountAccessRole'
 Ref: https://boto3.readthedocs.io/en/latest/guide/quickstart.html
 
 
-### Running the Tool
-
-Clone the Tool and run as below
-
 
