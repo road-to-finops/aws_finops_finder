@@ -13,7 +13,7 @@ These instructions will get you a copy of the Tool up and running on your local 
 * Python3
 * aws-vault
 
-IAM Role -Org**
+Access to the org IAM Role 'OrganizationAccountAccessRole'
 
 Ref: https://boto3.readthedocs.io/en/latest/guide/quickstart.html
 
