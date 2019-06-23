@@ -32,6 +32,7 @@ If you wish to run for just one account use:
 Access to the org IAM Role 'OrganizationAccountAccessRole'
 
 Ref: https://boto3.readthedocs.io/en/latest/guide/quickstart.html
+Ref: https://github.com/99designs/aws-vault
 
 
 
