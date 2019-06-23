@@ -66,7 +66,7 @@ def main():
     else:
         team_accounts  = list_accounts()
 
-    for account_id in team_accounts:
+    for account_id in tqdm(team_accounts):
         try:
             if len(account_id) < 15:
                 if method == 'eip':
@@ -85,7 +85,7 @@ def main():
                     alb  = elb.app_elb(account_id, client)
                 elif method == 'cloudtrail':
                     client = assume_role(account_id, 'cloudtrail')
-                    cloudtrail_result  = cloudtrail.extra_cloudtrail(team, account_id, client)
+                    cloudtrail_result  = cloudtrail.extra_cloudtrail(account_id, client)
                     
             
         except Exception as e:
