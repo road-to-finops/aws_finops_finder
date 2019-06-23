@@ -7,63 +7,11 @@ import argparse
 import boto3
 import pdb
 
-import org
 import eip
 import ec2
 import elb
 import cloudtrail
 log = logging.getLogger()
-
-
-class BaseManager:
-    def __init__(self, session, region):
-        self.session = session
-        self.region = region
-
-    @property
-    def client(self):
-        if not hasattr(self, "_client"):
-            self._client = self.session.client(self._name, region_name=self.region)
-        return self._client
-
-    @property
-    def resource(self):
-        if not hasattr(self, "_resource"):
-            self._resource = self.session.resource(self._name, region_name=self.region)
-        return self._resource
-
-
-class RechargerManager(BaseManager):
-    _name = "dynamodb"
-
-    def __init__(self, session, region, recharger_table):
-        super().__init__(session, region)
-        self.recharger_table = recharger_table
-
-    def get_dynamodb_table(self, table_name):
-        if not hasattr(self, f"_{table_name}"):
-            log.info(f"Getting table: {table_name}")
-            table = self.resource.Table(table_name)
-            setattr(self, f"_{table_name}", [item for item in table.scan()["Items"]])
-        return getattr(self, f"_{table_name}")
-
-    def get_service_teams(self):
-        recharger = self.get_dynamodb_table(self.recharger_table)
-        return {row["service_team"]["name"] for row in recharger}
-
-    def get_team_accounts(self, team, exceptions):
-        # Get a dictionary of account names/nums relating to service team
-        accounts = []
-        for row in self.get_dynamodb_table(self.recharger_table):
-            if row["service_team"]["name"] == team:
-                for acc in row.get("service_accounts", []):
-                    if (
-                        acc.get("account_name") not in exceptions["account_names"]
-                        or acc.get("account_id") not in exceptions["account_ids"]
-                    ):
-                        accounts.append(acc)
-
-        return accounts
 
 def configure_parser():
     parser = argparse.ArgumentParser(description="Identify idle/unused EBS volumes")
@@ -73,40 +21,6 @@ def configure_parser():
     #global method
     method = args.m
     return method
-
-
-
-def assume_role_recharger( role_session_name):
-    role_arn = 'arn:aws:iam::165293267760:role/RootAccountAdmin'
-    log.info(f"Trying to Assume Role with arn: {role_arn}")
-    try:
-        sts_client = boto3.client("sts")
-        assumed_role_object = sts_client.assume_role(
-            RoleArn=role_arn, RoleSessionName=role_session_name
-        )
-        creds = assumed_role_object["Credentials"]
-        boto_session = boto3.session.Session(
-            creds["AccessKeyId"], creds["SecretAccessKey"], creds["SessionToken"]
-        )
-
-        return boto_session
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "AccessDenied":
-            log.error(f"Unable to Assume Role with arn: {role_arn}")
-        raise
-
-
-def get_unmanaged():
-    # waiting for recharger functionality for unmanaged accounts
-    return {
-        "account_names": [
-            "IAM-Dev",
-            "KPMG D&A AWS 2",
-            "KPMG D&A AWS 1",
-            "KPMG D&A AWS 3",
-        ],
-        "account_ids": [""],
-    }
 
 
 def assume_role(account_id, service):
@@ -134,25 +48,18 @@ def assume_role(account_id, service):
         return None
    
 
+def list_accounts():
+        client = boto3.client('organizations', region_name='us-east-1')
+        paginator = client.get_paginator('list_accounts')
+        response_iterator = paginator.paginate()
+        account_ids = [account["Id"] for response in response_iterator for account in response["Accounts"] if account["Status"] != "SUSPENDED"]
+        return account_ids
 
 
 def main():
     method = configure_parser() 
-   '''
-    session = assume_role_recharger("patch_report")
-    recharger = RechargerManager(session, 'eu-west-1', "recharger.services")
-    accounts = {}
 
-    for team in tqdm(recharger.get_service_teams()):
-        team_accounts = recharger.get_team_accounts(team, get_unmanaged())
-        if team != "Unknown":
-            #print(team)
-
-
-    for account in team_accounts:
-        account_id = account['account_id']
-    '''
-    team_accounts  = org.list_accounts
+    team_accounts  = list_accounts()
     for account_id in team_accounts:
         try:
             if len(account_id) < 15:
