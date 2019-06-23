@@ -16,12 +16,15 @@ log = logging.getLogger()
 def configure_parser():
     parser = argparse.ArgumentParser(description="Identify idle/unused EBS volumes")
     parser.add_argument('-m', required=True, choices=['eip', 'stopped_ec2', 'elb', 'alb', 'cloudtrail'], help='which function do you want to use')
+    parser.add_argument('-a', required=False, help='Specific AWS Account you want to check')
+    
     args = parser.parse_args()
 
     #global method
     method = args.m
-    return method
-
+    aws_account_id = args.a
+    return method, aws_account_id
+ 
 
 def assume_role(account_id, service):
     
@@ -57,9 +60,12 @@ def list_accounts():
 
 
 def main():
-    method = configure_parser() 
+    method, aws_account_id = configure_parser() 
+    if aws_account_id is not None:
+        team_accounts = [aws_account_id]      
+    else:
+        team_accounts  = list_accounts()
 
-    team_accounts  = list_accounts()
     for account_id in team_accounts:
         try:
             if len(account_id) < 15:
