@@ -10,12 +10,13 @@ import pdb
 import eip
 import ec2
 import elb
+import ebs
 import cloudtrail
 log = logging.getLogger()
 
 def configure_parser():
     parser = argparse.ArgumentParser(description="Identify idle/unused EBS volumes")
-    parser.add_argument('-m', required=True, choices=['eip', 'stopped_ec2', 'elb', 'alb', 'cloudtrail'], help='which function do you want to use')
+    parser.add_argument('-m', required=True, choices=['eip', 'stopped_ec2', 'elb', 'alb', 'cloudtrail', 'ebs'], help='which function do you want to use')
     parser.add_argument('-a', required=False, help='Specific AWS Account you want to check')
     
     args = parser.parse_args()
@@ -86,11 +87,14 @@ def main():
                 elif method == 'cloudtrail':
                     client = assume_role(account_id, 'cloudtrail')
                     cloudtrail_result  = cloudtrail.extra_cloudtrail(account_id, client)
-                    
+                elif method == 'ebs':
+                    client = assume_role(account_id, 'ec2')
+                    ebs_result  = ebs.ebs(account_id, client)
+            
             
         except Exception as e:
             pass
-            #print(e)
+            print(e)
 
 
 if __name__ == "__main__":
