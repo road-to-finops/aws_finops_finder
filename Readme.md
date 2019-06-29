@@ -20,6 +20,7 @@ If you wish to run for just one account use:
 - eip - Unassigned eip
 - elb - empty elb
 - alb -empty alb
+-ebs - Unattached EBS Volumes
 
 ```
 
