@@ -1,4 +1,4 @@
-# aws_cloudtrail_finder
+# aws_finops_finder
 
 ## Getting Started
 
