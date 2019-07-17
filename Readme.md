@@ -12,7 +12,7 @@ aws-vault exec <cred>
 ./multi_account.py -m <methods>
 
 If you wish to run for just one account use:
-./multi_account.py -m <methods> -a <account_id>
+./multi_account.py -m <methods> -a <account_id> -region <optional region>
 
 #### Methods
 - stopped_ec2 - Stopped EC2
@@ -21,6 +21,12 @@ If you wish to run for just one account use:
 - elb - empty elb
 - alb -empty alb
 -ebs - Unattached EBS Volumes
+
+
+#### Region
+this is optional for all but TA.
+It will use your deafult from your account if not specified
+
 
 ```
 
