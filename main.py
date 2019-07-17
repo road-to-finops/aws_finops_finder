@@ -18,19 +18,24 @@ def configure_parser():
     parser = argparse.ArgumentParser(description="Identify idle/unused EBS volumes")
     parser.add_argument('-m', required=True, choices=['eip', 'stopped_ec2', 'elb', 'alb', 'cloudtrail', 'ebs'], help='which function do you want to use')
     parser.add_argument('-a', required=False, help='Specific AWS Account you want to check')
+    parser.add_argument('-region', help='which region you would like to look at', default=None)
     
     args = parser.parse_args()
 
     #global method
     method = args.m
     aws_account_id = args.a
-    return method, aws_account_id
+    region = args.region
+    return method, aws_account_id, region
  
 
-def assume_role(account_id, service):
+def assume_role(account_id, service, region):
     
     role_arn = "arn:aws:iam::%s:role/OrganizationAccountAccessRole" % account_id
     sts_client = boto3.client('sts')
+
+    if region is None:
+        region = sts_client.meta.region_name
     try:
 
         assumedRoleObject = sts_client.assume_role(
@@ -44,6 +49,7 @@ def assume_role(account_id, service):
             aws_access_key_id=credentials['AccessKeyId'],
             aws_secret_access_key=credentials['SecretAccessKey'],
             aws_session_token=credentials['SessionToken'],
+            region_name = region
         )
         return client
 
@@ -61,7 +67,7 @@ def list_accounts():
 
 
 def main():
-    method, aws_account_id = configure_parser() 
+    method, aws_account_id, region = configure_parser() 
     if aws_account_id is not None:
         team_accounts = [aws_account_id]      
     else:
@@ -71,24 +77,24 @@ def main():
         try:
             if len(account_id) < 15:
                 if method == 'eip':
-                    client = assume_role(account_id, 'ec2')
+                    client = assume_role(account_id, 'ec2', region)
                     print(eip.free_elastic_ip(account_id, client))
                 elif method == 'stopped_ec2':
-                    client = assume_role(account_id, 'ec2')
+                    client = assume_role(account_id, 'ec2', region)
                     stopped  = ec2.stopped_ec2(account_id, client)
                     #s_list.append(stopped)
                     print(stopped)
                 elif method == 'elb':
-                    client = assume_role(account_id, 'elb')
+                    client = assume_role(account_id, 'elb', region)
                     elb_code  = elb.classic_elb(account_id, client)
                 elif method == 'alb':
-                    client = assume_role(account_id, 'elbv2')
+                    client = assume_role(account_id, 'elbv2', region)
                     alb  = elb.app_elb(account_id, client)
                 elif method == 'cloudtrail':
-                    client = assume_role(account_id, 'cloudtrail')
+                    client = assume_role(account_id, 'cloudtrail', region)
                     cloudtrail_result  = cloudtrail.extra_cloudtrail(account_id, client)
                 elif method == 'ebs':
-                    client = assume_role(account_id, 'ec2')
+                    client = assume_role(account_id, 'ec2', region)
                     ebs_result  = ebs.ebs(account_id, client)
             
             
