@@ -6,17 +6,18 @@ from tqdm import tqdm
 import argparse
 import boto3
 import pdb
-
+from lambda_base import generate_csv
 import eip
 import ec2
 import elb
 import ebs
+import trusted_advisor
 import cloudtrail
 log = logging.getLogger()
 
 def configure_parser():
     parser = argparse.ArgumentParser(description="Identify idle/unused EBS volumes")
-    parser.add_argument('-m', required=True, choices=['eip', 'stopped_ec2', 'elb', 'alb', 'cloudtrail', 'ebs'], help='which function do you want to use')
+    parser.add_argument('-m', required=True, choices=['eip', 'stopped_ec2', 'elb', 'alb', 'cloudtrail', 'ebs', 'ta'], help='which function do you want to use')
     parser.add_argument('-a', required=False, help='Specific AWS Account you want to check')
     parser.add_argument('-region', help='which region you would like to look at', default=None)
     
@@ -67,6 +68,7 @@ def list_accounts():
 
 
 def main():
+    ta_result = []
     method, aws_account_id, region = configure_parser() 
     if aws_account_id is not None:
         team_accounts = [aws_account_id]      
@@ -96,12 +98,16 @@ def main():
                 elif method == 'ebs':
                     client = assume_role(account_id, 'ec2', region)
                     ebs_result  = ebs.ebs(account_id, client)
-            
+                elif method == 'ta':
+                    client = assume_role(account_id, 'support', 'us-east-1')
+                    ta_result.append(trusted_advisor.get_checks(account_id, client))
             
         except Exception as e:
             pass
-            print(e)
-
+            logging.warning("%s" % e)
+    #import pdb; pdb.set_trace()
+    attach_file = generate_csv(ta_result[0])
+    print(attach_file)
 
 if __name__ == "__main__":
     main()
