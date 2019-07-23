@@ -105,9 +105,7 @@ def main():
         except Exception as e:
             pass
             logging.warning("%s" % e)
-    #import pdb; pdb.set_trace()
-    attach_file = generate_csv(ta_result[0])
-    print(attach_file)
+    
 
 if __name__ == "__main__":
     main()
